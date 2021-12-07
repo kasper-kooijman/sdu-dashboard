@@ -8,5 +8,6 @@ def bar_chart(df):
         order=alt.Order(
             "type",
             sort="ascending"
-        )
+        ),
+        tooltip=["count"]
     )

@@ -7,12 +7,10 @@ import pandas as pd
 import streamlit as st
 
 from collections import Counter
+from datetime import datetime, date, time
 from pymongo import MongoClient
-from utils.charts import bar_chart
-from utils.counts import get_requests_and_clicks_per_day
 
-
-from utils.clicks import load_clickdata
+from utils import charts, clicks, counts
 
 client = MongoClient(**st.secrets["mongo"])
 SEARCH = client.db.PRODUCTION.search
@@ -22,14 +20,8 @@ RESULTS = client.db.PRODUCTION.results
 
 # Pull data from the collection.
 # Uses st.cache to only rerun when the query changes or after 10 min.
-def count_requests():
-    return SEARCH.count_documents({"datetime": {"$exists": True}})
 
 
-
-
-def count_new_requests(date):
-    return SEARCH.count_documents({"datetime": {"$gte": date}})
 
 
 def get_requests_per_day():
@@ -40,15 +32,17 @@ def get_requests_per_day():
 
 
 
+start_of_today = datetime.combine(date.today(), time())
 
-clickdata = load_clickdata(SEARCH, RESULTS)
-
-n_requests = count_requests()
-counts = get_requests_and_clicks_per_day(clickdata, SEARCH)
+clickdata = clicks.load_clickdata(SEARCH, RESULTS)
+requests_and_clicks_per_day = counts.get_requests_and_clicks_per_day(clickdata, SEARCH)
 
 
-st.sidebar.write(f"Total number of requests: {n_requests}")
+st.sidebar.write(f"Total number of requests: {counts.count_requests(SEARCH)}")
 st.sidebar.write(f"Total number of results clicked: {len(clickdata)}")
 
-alt_chart = bar_chart(counts)
+st.sidebar.write(f"Requests today: {counts.count_new_requests(start_of_today, SEARCH)}")
+st.sidebar.write(f"Results clicked today: {counts.get_clicks_today(clickdata, SEARCH)}")
+
+alt_chart = charts.bar_chart(requests_and_clicks_per_day)
 st.altair_chart(alt_chart, use_container_width=True)
