@@ -18,8 +18,8 @@ RESULTS = client.db.PRODUCTION.results
 
 
 
-start_of_today = datetime.combine(date.today(), time())
-# start_of_today = datetime.now() - timedelta(days=8)
+# start_of_today = datetime.combine(date.today(), time())
+start_of_today = datetime.now() - timedelta(days=8)
 # start_of_today = datetime.now()
 
 clickdata = clicks.load_clickdata(start_of_today, SEARCH, RESULTS)
