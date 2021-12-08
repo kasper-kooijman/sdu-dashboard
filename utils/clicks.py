@@ -10,12 +10,16 @@ from pymongo import MongoClient
 from .eclis import canonical_ecli
 
 def load_clickdata_from_mongo(statistics: MongoClient):
-    return list(statistics.find({}))
+    clickdata =  list(statistics.find({}))
+    return return_unique(clickdata)
+
+def write_clickdata_to_mongo(clickdata, statistics: MongoClient):
+    statistics.update_many({}, clickdata, upsert=True)
 
 def load_clickdata(date_since: datetime, search: MongoClient, results: MongoClient, statistics: MongoClient):
     clickdata = load_clickdata_from_mongo(statistics)
     clickdata = load_new_clicks(clickdata, date_since, search, results)
-    # write_clickdata_to_json(clickdata)
+    # write_clickdata_to_mongo(clickdata, statistics)
     return pd.DataFrame(clickdata)
 
 def load_clickdata_from_json():
