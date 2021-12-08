@@ -9,11 +9,9 @@ from pymongo import MongoClient
 
 from .eclis import canonical_ecli
 
-def load_clickdata(search: MongoClient, results: MongoClient):
+def load_clickdata(date_since: datetime, search: MongoClient, results: MongoClient):
     clickdata = load_clickdata_from_json()
-    # dt = datetime.combine(date.today(), datetime.min.time())
-    dt = datetime.now() - timedelta(days=7)
-    clickdata = load_new_clicks(clickdata, dt, search, results)
+    clickdata = load_new_clicks(clickdata, date_since, search, results)
     write_clickdata_to_json(clickdata)
     return pd.DataFrame(clickdata)
 
@@ -62,13 +60,14 @@ def load_new_clicks(clickdata, dt: datetime, search: MongoClient, results: Mongo
                 new_clickdata = [{
                     "date": query["datetime"].strftime("%Y-%m-%d"),
                     "query_reference": query["reference"],
+                    "user_id": query["user_id"],
                     "query": query["query"],
                     "result": click["query"],
                     "result_index": eclis.index(click["query"])
                 } for click in clicks if eclis.index(click["query"]) < 20]
                 clickdata.extend(new_clickdata)
 
-
+    clickdata = filter_users(clickdata)
     return return_unique(clickdata)
 
 
@@ -81,3 +80,6 @@ def return_unique(clickdata):
             seen.add(cd)
             unique_clickdata.append(click)
     return unique_clickdata
+
+def filter_users(clickdata):
+    return [cd for cd in clickdata if cd["user_id"] not in st.secrets["users"].values()]

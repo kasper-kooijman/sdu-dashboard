@@ -34,6 +34,12 @@ def counter_to_list(counts: dict, type_: str):
     ]
 
 
+def count_clicks_per_user(clickdata: pd.DataFrame, recurring_only: bool = False):
+    clicks_per_user = pd.DataFrame(clickdata.groupby(["user_id"]).size()).reset_index().rename(columns={0: "count"})
+    if recurring_only:
+        return clicks_per_user[clicks_per_user["count"]>1]
+    return clicks_per_user
+
 def get_requests_per_day(search: MongoClient):
     queries = search.find({"datetime": {"$exists": True}}, {"datetime": 1})
     dates = [d["datetime"].strftime("%Y-%m-%d") for d in queries]
