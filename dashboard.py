@@ -19,7 +19,7 @@ STATISTICS = client.db.PRODUCTION.statistics
 
 
 
-start_of_today = datetime.combine(date.today(), time())
+start_of_today = datetime.combine(date(2021, 12, 8), time())
 # start_of_today = datetime.now() - timedelta(days=8)
 # start_of_today = datetime.now()
 
