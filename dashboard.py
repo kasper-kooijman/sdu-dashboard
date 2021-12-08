@@ -15,14 +15,15 @@ from utils import charts, clicks, counts
 client = MongoClient(**st.secrets["mongo"])
 SEARCH = client.db.PRODUCTION.search
 RESULTS = client.db.PRODUCTION.results
+STATISTICS = client.db.PRODUCTION.statistics
 
 
 
 # start_of_today = datetime.combine(date.today(), time())
-start_of_today = datetime.now() - timedelta(days=8)
-# start_of_today = datetime.now()
+# start_of_today = datetime.now() - timedelta(days=8)
+start_of_today = datetime.now()
 
-clickdata = clicks.load_clickdata(start_of_today, SEARCH, RESULTS)
+clickdata = clicks.load_clickdata(start_of_today, SEARCH, RESULTS, STATISTICS)
 requests_and_clicks_per_day = counts.get_requests_and_clicks_per_day(clickdata, SEARCH)
 clicks_per_user = counts.count_clicks_per_user(clickdata)
 recurring_clicks_per_user = counts.count_clicks_per_user(clickdata, recurring_only=True)
