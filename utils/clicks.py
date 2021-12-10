@@ -14,12 +14,17 @@ def load_clickdata_from_mongo(statistics: MongoClient):
     return return_unique(clickdata)
 
 def write_clickdata_to_mongo(clickdata, statistics: MongoClient):
-    statistics.update_many({}, clickdata, upsert=True)
+    to_insert = [cd for cd in clickdata if "_id" not in cd]
+    if to_insert:
+        statistics.insert_many(to_insert)
 
-def load_clickdata(date_since: datetime, search: MongoClient, results: MongoClient, statistics: MongoClient):
+    print("Inserted: ", len(to_insert))
+
+def load_clickdata(search: MongoClient, results: MongoClient, statistics: MongoClient):
     clickdata = load_clickdata_from_mongo(statistics)
-    clickdata = load_new_clicks(clickdata, date_since, search, results)
-    # write_clickdata_to_mongo(clickdata, statistics)
+    last_date = get_last_date(clickdata)
+    clickdata = load_new_clicks(clickdata, last_date, search, results)
+    write_clickdata_to_mongo(clickdata, statistics)
     return pd.DataFrame(clickdata)
 
 def load_clickdata_from_json():
@@ -31,6 +36,9 @@ def write_clickdata_to_json(clickdata):
     with open("data/clicked_results.json", "w") as f:
         json.dump(dumps(clickdata), f)
 
+
+def get_last_date(clickdata):
+    return max(cd["date"] for cd in clickdata)
 
 
 # @st.cache
@@ -65,7 +73,7 @@ def load_new_clicks(clickdata, dt: datetime, search: MongoClient, results: Mongo
             ]}))
             if clicks:
                 new_clickdata = [{
-                    "date": query["datetime"].strftime("%Y-%m-%d"),
+                    "date": query["datetime"],
                     "query_reference": query["reference"],
                     "user_id": query["user_id"],
                     "query": query["query"],
