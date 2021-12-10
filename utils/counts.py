@@ -5,7 +5,8 @@ from datetime import datetime
 from pymongo.mongo_client import MongoClient
 
 def get_requests_and_clicks_per_day(clickdata: pd.DataFrame, search: MongoClient):
-    clicks_per_day = dict(Counter(clickdata["date"]))
+    click_dates = [cd.strftime("%Y-%m-%d") for cd in clickdata["date"]]
+    clicks_per_day = dict(Counter(click_dates))
     requests_per_day = get_requests_per_day(search)
 
     clicks_per_day = counter_to_list(clicks_per_day, "clicks")
