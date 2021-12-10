@@ -27,15 +27,6 @@ def load_clickdata(search: MongoClient, results: MongoClient, statistics: MongoC
     write_clickdata_to_mongo(clickdata, statistics)
     return pd.DataFrame(clickdata)
 
-def load_clickdata_from_json():
-    with open("data/clicked_results.json", "r") as f:
-        clickdata = loads(json.load(f))
-    return clickdata
-
-def write_clickdata_to_json(clickdata):
-    with open("data/clicked_results.json", "w") as f:
-        json.dump(dumps(clickdata), f)
-
 
 def get_last_date(clickdata):
     return max(cd["date"] for cd in clickdata)
