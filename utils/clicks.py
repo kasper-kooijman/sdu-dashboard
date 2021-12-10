@@ -9,6 +9,15 @@ from pymongo import MongoClient
 
 from .eclis import canonical_ecli
 
+
+def load_clickdata(search: MongoClient, results: MongoClient, statistics: MongoClient):
+    clickdata = load_clickdata_from_mongo(statistics)
+    last_date = get_last_date(clickdata)
+    clickdata = load_new_clicks(clickdata, last_date, search, results)
+    write_clickdata_to_mongo(clickdata, statistics)
+    return pd.DataFrame(clickdata)
+
+
 def load_clickdata_from_mongo(statistics: MongoClient):
     clickdata =  list(statistics.find({}))
     return return_unique(clickdata)
@@ -19,13 +28,6 @@ def write_clickdata_to_mongo(clickdata, statistics: MongoClient):
         statistics.insert_many(to_insert)
 
     print("Inserted: ", len(to_insert))
-
-def load_clickdata(search: MongoClient, results: MongoClient, statistics: MongoClient):
-    clickdata = load_clickdata_from_mongo(statistics)
-    last_date = get_last_date(clickdata)
-    clickdata = load_new_clicks(clickdata, last_date, search, results)
-    write_clickdata_to_mongo(clickdata, statistics)
-    return pd.DataFrame(clickdata)
 
 
 def get_last_date(clickdata):

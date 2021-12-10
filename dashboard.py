@@ -33,10 +33,14 @@ st.sidebar.write(f"Total number of users: {len(clicks_per_user)}")
 st.sidebar.write(f"Requests today: {counts.count_new_requests(start_of_today, SEARCH)}")
 st.sidebar.write(f"Results clicked today: {counts.get_clicks_today(clickdata, SEARCH)}")
 
+col1, col2 = st.columns([3, 1])
+
 # Bar chart of clicks and requests per day
 alt_chart = charts.bar_chart(requests_and_clicks_per_day)
-st.altair_chart(alt_chart, use_container_width=True)
+
+col1.altair_chart(alt_chart, use_container_width=True)
 
 # Histogram of clicks per user
 hist = charts.histogram(recurring_clicks_per_user)
-st.altair_chart(hist, use_container_width=True)
+col1.altair_chart(hist, use_container_width=True)
+col2.write(f"Percentage of recurring users: {round(len(recurring_clicks_per_user)/len(clicks_per_user), 2)}")
