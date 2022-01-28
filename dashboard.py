@@ -6,8 +6,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from collections import Counter
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, date, time
 from pymongo import MongoClient
 
 from utils import charts, clicks, counts
@@ -18,8 +17,9 @@ RESULTS = client.db.PRODUCTION.results
 STATISTICS = client.db.PRODUCTION.statistics
 
 
-
-start_of_today = datetime.combine(datetime.now(), time())
+start_of_today = datetime.combine(date.today(), time())
+# start_of_today = datetime.now() - timedelta(days=8)
+# start_of_today = datetime.now()
 
 clickdata = clicks.load_clickdata(SEARCH, RESULTS, STATISTICS)
 requests_and_clicks_per_day = counts.get_requests_and_clicks_per_day(clickdata, SEARCH)
@@ -29,7 +29,9 @@ recurring_clicks_per_user = counts.count_clicks_per_user(clickdata, recurring_on
 st.sidebar.write(f"Total number of requests: {counts.count_requests(SEARCH)}")
 st.sidebar.write(f"Total number of results clicked: {len(clickdata)}")
 st.sidebar.write(f"Total number of users: {len(clicks_per_user)}")
-st.sidebar.write(f"Percentage of recurring users: {round(len(recurring_clicks_per_user)/len(clicks_per_user), 2)}")
+st.sidebar.write(
+    f"Percentage of recurring users: {round(len(recurring_clicks_per_user)/len(clicks_per_user), 2)}"
+)
 
 st.sidebar.write(f"Requests today: {counts.count_new_requests(start_of_today, SEARCH)}")
 st.sidebar.write(f"Results clicked today: {counts.get_clicks_today(clickdata, SEARCH)}")
