@@ -1,16 +1,14 @@
-"""
-# My first app
-Here's our first attempt at using data to create a table:
-"""
-import altair as alt
-import pandas as pd
 import streamlit as st
 
-from collections import Counter
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, date, time
 from pymongo import MongoClient
 
-from utils import charts, clicks, counts
+from utils import (
+    charts,
+    clicks_deduced,
+    counts_deduced,
+    text_search,
+)
 
 client = MongoClient(**st.secrets["mongo"])
 SEARCH = client.db.PRODUCTION.search
@@ -18,30 +16,52 @@ RESULTS = client.db.PRODUCTION.results
 STATISTICS = client.db.PRODUCTION.statistics
 
 
+start_of_today = datetime.combine(date.today(), time())
+# start_of_today = datetime.now() - timedelta(days=8)
+# start_of_today = datetime.now()
 
-start_of_today = datetime.combine(datetime.now(), time())
+clickdata_deduced = clicks_deduced.load_clickdata_deduced(STATISTICS)
 
-clickdata = clicks.load_clickdata(SEARCH, RESULTS, STATISTICS)
-requests_and_clicks_per_day = counts.get_requests_and_clicks_per_day(clickdata, SEARCH)
-clicks_per_user = counts.count_clicks_per_user(clickdata)
-recurring_clicks_per_user = counts.count_clicks_per_user(clickdata, recurring_only=True)
+doc_search_per_day = counts_deduced.get_requests_and_clicks_per_day(
+    clickdata_deduced, SEARCH
+)
 
-st.sidebar.write(f"Total number of requests: {counts.count_requests(SEARCH)}")
-st.sidebar.write(f"Total number of results clicked: {len(clickdata)}")
+text_search_per_day = text_search.get_requests_and_clicks_per_day(search=SEARCH)
+
+clicks_per_user = counts_deduced.count_clicks_per_user(clickdata_deduced)
+recurring_clicks_per_user = counts_deduced.count_clicks_per_user(
+    clickdata_deduced, recurring_only=True
+)
+
+st.sidebar.write(f"Total number of requests: {counts_deduced.count_requests(SEARCH)}")
+st.sidebar.write(f"Total number of results clicked: {len(clickdata_deduced)}")
 st.sidebar.write(f"Total number of users: {len(clicks_per_user)}")
-st.sidebar.write(f"Percentage of recurring users: {round(len(recurring_clicks_per_user)/len(clicks_per_user), 2)}")
+st.sidebar.write(
+    f"Percentage of recurring users: {round(len(recurring_clicks_per_user)/len(clicks_per_user), 2)}"
+)
 
-st.sidebar.write(f"Requests today: {counts.count_new_requests(start_of_today, SEARCH)}")
-st.sidebar.write(f"Results clicked today: {counts.get_clicks_today(clickdata, SEARCH)}")
+st.sidebar.write(
+    f"Requests today: {counts_deduced.count_new_requests(start_of_today, SEARCH)}"
+)
+st.sidebar.write(
+    f"Results clicked today: {counts_deduced.get_clicks_today(clickdata_deduced, SEARCH)}"
+)
 
 
 # Bar chart of clicks and requests per day
-alt_chart = charts.layered_bar_chart(requests_and_clicks_per_day)
+alt_chart = charts.layered_bar_chart(
+    doc_search_per_day,
+    "Doc search requests and opened results per day.",
+)
 st.altair_chart(alt_chart, use_container_width=True)
 
-alt_chart = charts.bar_chart(counts.get_weekly_recurring_users(clickdata))
+alt_chart = charts.layered_bar_chart(
+    text_search_per_day,
+    "Text search requests and results opened per day.",
+)
 st.altair_chart(alt_chart, use_container_width=True)
 
-# Histogram of clicks per user
-hist = charts.histogram(recurring_clicks_per_user)
-st.altair_chart(hist, use_container_width=True)
+alt_chart = charts.bar_chart(
+    counts_deduced.get_weekly_recurring_users(clickdata_deduced)
+)
+st.altair_chart(alt_chart, use_container_width=True)
